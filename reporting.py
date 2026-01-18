@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from models import MarketDataPoint
@@ -72,6 +73,17 @@ def _ascii_equity_curve(values: List[float], width: int = 60) -> str:
     return "".join(out)
 
 
+def _write_periodic_returns_csv(md_path: str, rets: List[float]) -> str:
+    # Write the full return series to a separate CSV so GitHub renders it cleanly
+    p = Path(md_path)
+    out = p.with_name("periodic_returns.csv")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write("index,return\n")
+        for i, r in enumerate(rets, start=1):
+            f.write(f"{i},{r:.8f}\n")
+    return out.name  # relative filename for Markdown link
+
+
 def write_performance_md(
     path: str,
     metrics: Dict[str, float],
@@ -81,8 +93,22 @@ def write_performance_md(
     values = [eq for _, eq in equity_curve]
     spark = _ascii_equity_curve(values)
 
-    # Compute the periodic return series (required by the spec)
+    # Required by the spec
     rets = periodic_returns(equity_curve)
+
+    # Write full series to CSV (because Markdown will collapse newlines unless it is a code block,
+    # and very large code blocks can fail to render on GitHub)
+    rets_csv_name = _write_periodic_returns_csv(path, rets)
+
+    # Small summary so the report itself still “shows” the return series meaningfully
+    if rets:
+        mean_r = sum(rets) / len(rets)
+        var_r = sum((r - mean_r) ** 2 for r in rets) / (len(rets) - 1) if len(rets) > 1 else 0.0
+        std_r = math.sqrt(var_r)
+        min_r = min(rets)
+        max_r = max(rets)
+    else:
+        mean_r = std_r = min_r = max_r = 0.0
 
     lines: List[str] = []
     lines.append("# Backtest Performance")
@@ -100,20 +126,23 @@ def write_performance_md(
 
     lines.append("## Equity Curve (ASCII)")
     lines.append("")
-    # Plain text line (not a Markdown code block) so GitHub can preview it reliably
+    lines.append("```")
     lines.append(spark)
+    lines.append("```")
     lines.append("")
 
     lines.append("## Periodic Returns")
     lines.append("")
     lines.append(f"Count: {len(rets)}")
     lines.append("")
-    lines.append("Index,Return")
+    lines.append("| Stat | Value |")
+    lines.append("|---|---:|")
+    lines.append(f"| Mean | {mean_r:.8f} |")
+    lines.append(f"| Std | {std_r:.8f} |")
+    lines.append(f"| Min | {min_r:.8f} |")
+    lines.append(f"| Max | {max_r:.8f} |")
     lines.append("")
-    # Plain CSV-style lines (not indented) to avoid GitHub 'Unable to render code block'
-    lines.append("index,return")
-    for i, r in enumerate(rets, start=1):
-        lines.append(f"{i},{r:.8f}")
+    lines.append(f"Full return series written to `{rets_csv_name}` (open/download that file on GitHub).")
     lines.append("")
 
     lines.append("## Interpretation")
