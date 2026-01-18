@@ -1,76 +1,79 @@
-# CSV-Based Algorithmic Trading Backtester
+CSV-Based Algorithmic Trading Backtester
 
-This repo contains a small, modular backtester that:
+This repository contains a small, modular Python backtester that:
 
-1. Loads market data from a CSV file (`timestamp,symbol,price`).
-2. Runs one or more strategies to generate trade signals.
-3. Converts signals into orders and simulates execution.
-4. Tracks positions and equity through time.
-5. Writes a `performance.md` report.
+Loads market data from a CSV file (timestamp, symbol, price).
 
-## Files
+Runs one or more strategies to generate trade signals.
 
-- `data_generator.py` - provided market data generator to create `market_data.csv`
-- `data_loader.py` - reads `market_data.csv` using the standard library `csv` module
-- `models.py` - immutable `MarketDataPoint` dataclass, mutable `Order`, custom exceptions
-- `strategies.py` - `Strategy` interface + two concrete strategies
-- `engine.py` - execution engine (portfolio, order simulation, resiliency)
-- `reporting.py` - return metrics + Markdown report writer
-- `main.py` - entrypoint
-- `tests/` - unit tests
-- `performance.ipynb` - notebook that runs a full backtest and shows plots/metrics
+Converts signals into orders and simulates execution.
 
-## Setup
+Tracks cash, positions, and equity over time.
 
-Python 3.10+ is recommended.
+Writes a performance report to performance.md.
 
-No external packages are required to run the backtest.
+Contents
 
-(Optional) For notebook plotting:
+data_generator.py
+Provided market data generator. Creates market_data.csv.
 
-```bash
+data_loader.py
+Reads market_data.csv using the Python standard library csv module.
+
+models.py
+MarketDataPoint (immutable/frozen dataclass), Order (mutable), and custom exceptions.
+
+strategies.py
+Strategy interface plus two example strategies.
+
+engine.py
+Execution engine (order validation, simulated execution, portfolio updates, error handling).
+
+reporting.py
+Performance metrics and Markdown report writer.
+
+main.py
+Runs the full pipeline: load data → run backtest → write report.
+
+tests/
+Unit tests.
+
+performance.ipynb
+Notebook version that runs a backtest and shows metrics/plots.
+
+Requirements
+
+Python 3.10 or newer.
+
+The backtest itself does not require any external packages.
+
+If you want to run the notebook with plots, install:
 python -m pip install matplotlib notebook
-```
 
-## Quick Start
+How to Run
 
-From the repo root:
-
-1) Generate data:
-
-```bash
+Generate the CSV data:
 python data_generator.py
-```
 
-This creates `market_data.csv`.
+This writes market_data.csv to the repo root.
 
-2) Run the backtest:
-
-```bash
+Run the backtest (writes performance.md):
 python main.py --csv market_data.csv --report performance.md
-```
 
-3) Run unit tests:
+Optional: disable simulated execution failures (deterministic run):
+python main.py --csv market_data.csv --report performance.md --fail-rate 0
 
-```bash
-python -m unittest -v
-```
+Run unit tests:
+python -m unittest discover -s tests -p "test_*.py" -v
 
-## Notes on the Simulation
+Simulation Notes
 
-- The engine uses a simple cash account + long-only positions (no shorting).
-- Some executions are intentionally failed to demonstrate `ExecutionError` handling (controlled by `--fail-rate`).
+The portfolio is long-only (no shorting).
 
-## Delivering (GitHub)
+Orders with invalid quantity are rejected (OrderError).
 
-1) Create a new GitHub repo under your account.
-2) From this folder:
+The engine can simulate occasional execution failures (ExecutionError) and continues processing.
 
-```bash
-git init
-git add .
-git commit -m "initial commit"
-git branch -M main
-git remote add origin https://github.com/<YOUR_USERNAME>/<REPO_NAME>.git
-git push -u origin main
-```
+Submission
+
+This repository is intended to be pushed to GitHub and shared via the repository link.
