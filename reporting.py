@@ -52,7 +52,6 @@ def max_drawdown(equity_curve: List[Tuple[MarketDataPoint, float]]) -> float:
 def _ascii_equity_curve(values: List[float], width: int = 60) -> str:
     if not values:
         return ""
-
     if len(values) <= width:
         sample = values
     else:
@@ -65,7 +64,7 @@ def _ascii_equity_curve(values: List[float], width: int = 60) -> str:
         return "." * len(sample)
 
     chars = " .:-=+*#%@"
-    out = []
+    out: List[str] = []
     for v in sample:
         t = (v - low) / (high - low)
         idx = int(round(t * (len(chars) - 1)))
@@ -101,8 +100,8 @@ def write_performance_md(
 
     lines.append("## Equity Curve (ASCII)")
     lines.append("")
-    # Indented code block (no backticks)
-    lines.append("    " + spark)
+    # Plain text line (not a Markdown code block) so GitHub can preview it reliably
+    lines.append(spark)
     lines.append("")
 
     lines.append("## Periodic Returns")
@@ -111,10 +110,10 @@ def write_performance_md(
     lines.append("")
     lines.append("Index,Return")
     lines.append("")
-    # Indented CSV-style listing so the full series is visible in the Markdown report
-    lines.append("    index,return")
+    # Plain CSV-style lines (not indented) to avoid GitHub 'Unable to render code block'
+    lines.append("index,return")
     for i, r in enumerate(rets, start=1):
-        lines.append(f"    {i},{r:.8f}")
+        lines.append(f"{i},{r:.8f}")
     lines.append("")
 
     lines.append("## Interpretation")
