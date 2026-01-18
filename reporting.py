@@ -51,7 +51,7 @@ def max_drawdown(equity_curve: List[Tuple[MarketDataPoint, float]]) -> float:
 
 def _ascii_equity_curve(values: List[float], width: int = 60) -> str:
     if not values:
-        return ''
+        return ""
 
     if len(values) <= width:
         sample = values
@@ -62,55 +62,71 @@ def _ascii_equity_curve(values: List[float], width: int = 60) -> str:
     low = min(sample)
     high = max(sample)
     if high == low:
-        return '.' * len(sample)
+        return "." * len(sample)
 
-    chars = ' .:-=+*#%@'
+    chars = " .:-=+*#%@"
     out = []
     for v in sample:
         t = (v - low) / (high - low)
         idx = int(round(t * (len(chars) - 1)))
         out.append(chars[idx])
-    return ''.join(out)
+    return "".join(out)
 
 
 def write_performance_md(
     path: str,
     metrics: Dict[str, float],
     equity_curve: List[Tuple[MarketDataPoint, float]],
-    notes: str = ''
+    notes: str = "",
 ) -> None:
     values = [eq for _, eq in equity_curve]
     spark = _ascii_equity_curve(values)
 
-    lines = []
-    lines.append('# Backtest Performance')
-    lines.append('')
-    lines.append('## Summary Metrics')
-    lines.append('')
-    lines.append('| Metric | Value |')
-    lines.append('|---|---:|')
+    # Compute the periodic return series (required by the spec)
+    rets = periodic_returns(equity_curve)
+
+    lines: List[str] = []
+    lines.append("# Backtest Performance")
+    lines.append("")
+    lines.append("## Summary Metrics")
+    lines.append("")
+    lines.append("| Metric | Value |")
+    lines.append("|---|---:|")
     for k, v in metrics.items():
-        if k in ('Total Return', 'Max Drawdown'):
-            lines.append(f'| {k} | {v:.2%} |')
+        if k in ("Total Return", "Max Drawdown"):
+            lines.append(f"| {k} | {v:.2%} |")
         else:
-            lines.append(f'| {k} | {v:.4f} |')
-    lines.append('')
-    lines.append('## Equity Curve (ASCII)')
-    lines.append('')
-    lines.append('```')
-    lines.append(spark)
-    lines.append('```')
-    lines.append('')
-    lines.append('## Interpretation')
-    lines.append('')
+            lines.append(f"| {k} | {v:.4f} |")
+    lines.append("")
+
+    lines.append("## Equity Curve (ASCII)")
+    lines.append("")
+    # Indented code block (no backticks)
+    lines.append("    " + spark)
+    lines.append("")
+
+    lines.append("## Periodic Returns")
+    lines.append("")
+    lines.append(f"Count: {len(rets)}")
+    lines.append("")
+    lines.append("Index,Return")
+    lines.append("")
+    # Indented CSV-style listing so the full series is visible in the Markdown report
+    lines.append("    index,return")
+    for i, r in enumerate(rets, start=1):
+        lines.append(f"    {i},{r:.8f}")
+    lines.append("")
+
+    lines.append("## Interpretation")
+    lines.append("")
     if notes:
         lines.append(notes.strip())
     else:
         lines.append(
-            'This is a simple tick-level simulation with basic strategies. '
-            'Sharpe is computed from tick returns (not annualized), so treat it as a relative score '
-            'for comparing runs using the same data and settings.'
+            "This is a simple tick-level simulation with basic strategies. "
+            "Sharpe is computed from tick returns (not annualized), so treat it as a relative score "
+            "for comparing runs using the same data and settings."
         )
 
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines) + '\n')
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
