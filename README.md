@@ -14,11 +14,11 @@ Writes a performance report to performance.md.
 
 Contents
 
-data_generator.py
-Provided market data generator. Creates market_data.csv.
+data\_generator.py
+Provided market data generator. Creates market\_data.csv.
 
-data_loader.py
-Reads market_data.csv using the Python standard library csv module.
+data\_loader.py
+Reads market\_data.csv using the Python standard library csv module.
 
 models.py
 MarketDataPoint (immutable/frozen dataclass), Order (mutable), and custom exceptions.
@@ -53,18 +53,18 @@ python -m pip install matplotlib notebook
 How to Run
 
 Generate the CSV data:
-python data_generator.py
+python data\_generator.py
 
-This writes market_data.csv to the repo root.
+This writes market\_data.csv to the repo root.
 
 Run the backtest (writes performance.md):
-python main.py --csv market_data.csv --report performance.md
+python main.py --csv market\_data.csv --report performance.md
 
 Optional: disable simulated execution failures (deterministic run):
-python main.py --csv market_data.csv --report performance.md --fail-rate 0
+python main.py --csv market\_data.csv --report performance.md --fail-rate 0
 
 Run unit tests:
-python -m unittest discover -s tests -p "test_*.py" -v
+python -m unittest discover -s tests -p "test\_\*.py" -v
 
 Simulation Notes
 
@@ -77,3 +77,26 @@ The engine can simulate occasional execution failures (ExecutionError) and conti
 Submission
 
 This repository is intended to be pushed to GitHub and shared via the repository link.
+
+From the repo root:
+
+```powershell
+# Go to repo root
+cd "C:\Users\Pavlos\Desktop\CSV-Based-Algorithmic-Trading-Backtester"
+
+# (Re)generate market data (instructor generator)
+py "C:\Users\Pavlos\Desktop\(325) Assignment 1\data_generator.py" --out ".\market_data.csv"
+
+# Remove prior outputs
+Remove-Item -Force .\performance.md -ErrorAction SilentlyContinue
+Remove-Item -Force .\periodic_returns.csv -ErrorAction SilentlyContinue
+
+# Run backtester
+py .\main.py --csv .\market_data.csv
+
+# Run unit tests
+py -m pytest -q
+
+
+
+
